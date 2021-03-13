@@ -1,4 +1,5 @@
 import re
+import io
 import sys
 import discord
 from enum import Enum
@@ -57,8 +58,14 @@ def get_status_type(message: str):
     else:
         return (StatusType.PLAIN,code_match,None)
 
-async def get_webhook_for_channel(channel):
-    return
+async def get_webhook_for_channel(channel: discord.TextChannel) -> discord.Webhook:
+    webhooks = await channel.webhooks()
+    if len(webhooks) == 0:
+        # No webhook available, create one.
+        found_webhook = await channel.create_webhook(name="HexCorp Portable AI")
+    else:
+        found_webhook = webhooks[0]
+    return found_webhook
 
 @bot.event
 async def on_message(message: discord.Message):
@@ -67,17 +74,38 @@ async def on_message(message: discord.Message):
     status_type, code_match, address_match = get_status_type(message.content)
 
     if status_type == StatusType.NONE:
+        await bot.process_commands(message)
         return
 
+    status_message = ""
+    base_message = f"{code_match.group(2)} :: Code `{code_match.group(3)}` :: "
+
     if status_type == StatusType.PLAIN:
-        print("Printing plain status code.")
+        status_message = f"{base_message} {code_map.get(code_match.group(3), 'INVALID CODE')}"
     elif status_type == StatusType.INFORMATIVE:
-        print("Informative")
+        status_message = f"{base_message} {code_map.get(code_match.group(3), 'INVALID CODE')}{code_match.group(4)}"
     elif status_type == StatusType.ADDRESS_BY_ID_PLAIN:
-        print("ABI plain")
+        status_message = f"{base_message}Addressing: Drone #{address_match.group(1)}"
     elif status_type == StatusType.ADDRESS_BY_ID_INFORMATIVE:
-        print("ABI info")
+        status_message = f"{base_message}Addressing: Drone #{address_match.group(1)}{address_match.group(2)}"
 
     webhook = await get_webhook_for_channel(message.channel)
+
+    # Convert any message attachments
+    attachments_as_files = []
+    for attachment in message.attachments:
+        attachments_as_files.append(discord.File(io.BytesIO(await attachment.read()), filename=attachment.filename))
+
+    await message.delete()
+    await webhook.send(
+        content=status_message,
+        username=message.author.display_name,
+        avatar_url=message.author.avatar_url
+        )
+
+@bot.command(name="list")
+async def _list(context, page = 1):
+    print("List command triggered.")
+    map_length = len(code_map)
 
 bot.run(sys.argv[1])
