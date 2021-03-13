@@ -3,11 +3,11 @@ import io
 import sys
 import discord
 from enum import Enum
-from discord.ext.commands import Bot
+from discord.ext import commands, tasks
 
 from codemap import code_map
 
-bot = Bot(command_prefix="hc!", case_insensitive=True, help_command=None)
+bot = commands.Bot(command_prefix="hc!", case_insensitive=True, help_command=None)
 
 status_code_regex = re.compile(r'^((\d{4}) :: (\d{3}))( :: (.*))?$', re.DOTALL)
 '''
@@ -69,11 +69,17 @@ async def get_webhook_for_channel(channel: discord.TextChannel) -> discord.Webho
 
 @bot.event
 async def on_ready():
-    print("HexCorp Portable AI online. :)")
-
+    if not count_guilds.is_running():
+        count_guilds.start()
 
 @bot.event
 async def on_message(message: discord.Message):
+    '''
+    Turns status codes into status messages.
+    '''
+
+    if message.author.bot == True:
+        return
     
     status_type, code_match, address_match = get_status_type(message.content)
 
@@ -109,8 +115,9 @@ async def on_message(message: discord.Message):
 
 @bot.command(name="list")
 async def _list(context, page = 1):
-
-    #This command displays paginated status codes.
+    '''
+    Displays paginated status codes
+    '''
 
     values_per_page = 10
     start_index = values_per_page * page
@@ -139,6 +146,9 @@ async def _list(context, page = 1):
 
 @bot.command()
 async def help(context):
+    '''
+    Displays help menu.
+    '''
 
     help_embed = discord.Embed(title="HexCorp Portable AI", description=f"Proudly optimizing {len(bot.guilds)} server(s).", color=0xff66ff)
     help_embed.add_field(
@@ -159,5 +169,9 @@ async def help(context):
     help_embed.set_footer(text="Thank you for choosing HexCorp. Your unwavering loyalty is valued.")
 
     await context.send(embed=help_embed)
+
+@tasks.loop(hours=6)
+async def count_guilds():
+    await bot.change_presence(activity=discord.Game(name=f"Optimizing {len(bot.guilds)} servers - hc!help"))
 
 bot.run(sys.argv[1])
