@@ -91,9 +91,9 @@ async def on_message(message: discord.Message):
     base_message = f"{code_match.group(2)} :: Code `{code_match.group(3)}` :: "
 
     if status_type == StatusType.PLAIN:
-        status_message = f"{base_message} {code_map.get(code_match.group(3), 'INVALID CODE')}"
+        status_message = f"{base_message}{code_map.get(code_match.group(3), 'INVALID CODE')}"
     elif status_type == StatusType.INFORMATIVE:
-        status_message = f"{base_message} {code_map.get(code_match.group(3), 'INVALID CODE')}{code_match.group(4)}"
+        status_message = f"{base_message}{code_map.get(code_match.group(3), 'INVALID CODE')}{code_match.group(4)}"
     elif status_type == StatusType.ADDRESS_BY_ID_PLAIN:
         status_message = f"{base_message}Addressing: Drone #{address_match.group(1)}"
     elif status_type == StatusType.ADDRESS_BY_ID_INFORMATIVE:
