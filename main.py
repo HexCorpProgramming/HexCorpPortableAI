@@ -7,7 +7,7 @@ from discord.ext.commands import Bot
 
 from codemap import code_map
 
-bot = Bot(command_prefix="hc!", case_insensitive=True)
+bot = Bot(command_prefix="hc!", case_insensitive=True, help_command=None)
 
 status_code_regex = re.compile(r'^((\d{4}) :: (\d{3}))( :: (.*))?$', re.DOTALL)
 '''
@@ -68,9 +68,13 @@ async def get_webhook_for_channel(channel: discord.TextChannel) -> discord.Webho
     return found_webhook
 
 @bot.event
-async def on_message(message: discord.Message):
-    print("on_message event triggered.")
+async def on_ready():
+    print("HexCorp Portable AI online. :)")
 
+
+@bot.event
+async def on_message(message: discord.Message):
+    
     status_type, code_match, address_match = get_status_type(message.content)
 
     if status_type == StatusType.NONE:
@@ -105,7 +109,55 @@ async def on_message(message: discord.Message):
 
 @bot.command(name="list")
 async def _list(context, page = 1):
-    print("List command triggered.")
-    map_length = len(code_map)
+
+    #This command displays paginated status codes.
+
+    values_per_page = 10
+    start_index = values_per_page * page
+
+    if start_index > len(code_map):
+        error_embed = discord.Embed(title="❌ Page number too high.", color=0xff66ff)
+        await context.send(embed=error_embed)
+        return
+
+    code_embed = discord.Embed(title=f"Code map page {page}", color=0xff66ff, url="https://www.hexcorp.net/drone-status-codes")
+    code_embed.set_footer(text="Full code list at: https://www.hexcorp.net/drone-status-codes")
+
+    code_list = list(code_map.items())
+    for i in range(start_index, start_index + values_per_page):
+        try:
+            code_embed.add_field(inline=False, name=code_list[i][0], value=code_list[i][1])
+        except IndexError:
+            break
+
+    if len(code_embed.fields) == 0:
+        error_embed = discord.Embed(title="❌ Page number too high.", color=0xff66ff)
+        await context.send(embed=error_embed)
+        return
+
+    await context.send(embed=code_embed)
+
+@bot.command()
+async def help(context):
+
+    help_embed = discord.Embed(title="HexCorp Portable AI", description=f"Proudly optimizing {len(bot.guilds)} server(s).", color=0xff66ff)
+    help_embed.add_field(
+        inline=False,
+        name="Speech Optimization",
+        value="Type any HexCorp status code (`0001 :: 200`) and the Mxtress AI will automatically convert it into a status message. You can use any drone ID to start a status code. Additional information can be appended (`0001 :: 050 :: It feels good to obey.`)"
+        )
+    help_embed.add_field(
+        inline=False,
+        name="hc!list",
+        value="Displays a paginated list of status codes. Specify a page number to see more codes (`hc!list 2`)"
+    )
+    help_embed.add_field(
+        inline=False,
+        name="hc!help",
+        value="Displays this help menu."
+    )
+    help_embed.set_footer(text="Thank you for choosing HexCorp. Your unwavering loyalty is valued.")
+
+    await context.send(embed=help_embed)
 
 bot.run(sys.argv[1])
