@@ -1,4 +1,5 @@
 import re
+import sys
 import discord
 from discord.ext.commands import Bot
 
@@ -6,7 +7,7 @@ from codemap import code_map
 
 bot = Bot(command_prefix="hc!", case_insensitive=True)
 
-speech_code_regex = re.compile(r'^((\d{4}) :: (\d{3}))( :: (.*))?$', re.DOTALL)
+status_code_regex = re.compile(r'^((\d{4}) :: (\d{3}))( :: (.*))?$', re.DOTALL)
 '''
 Regex groups for full status code regex:
 0: Full match. ("0001 :: 200 :: Additional information")
@@ -28,17 +29,11 @@ This regex is to be checked on the status regex's 5th group when the status code
 
 @bot.event
 async def on_message(message: discord.Message):
+    print("on_message event triggered.")
 
-    match = status_code_regex.match(message.content)
+    code_match = status_code_regex.match(message.content)
 
-    if match_code is None:
+    if code_match is None:
         return
 
-    if match.group(3) == "110" and match.group(4) is not None:
-        match_address = address_by_id_regex.match(match.group(4))
-        if match_address is None:
-            pass
-        else:
-            
-
-    else:
+bot.run(sys.argv[1])
