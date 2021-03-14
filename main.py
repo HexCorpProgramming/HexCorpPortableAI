@@ -9,6 +9,8 @@ from codemap import code_map
 
 bot = commands.Bot(command_prefix="hc!", case_insensitive=True, help_command=None)
 
+DRONE_AVATAR = "https://images.squarespace-cdn.com/content/v1/5cd68fb28dfc8ce502f14199/1586799484353-XBXNJR1XBM84C9YJJ0RU/ke17ZwdGBToddI8pDm48kLxnK526YWAH1qleWz-y7AFZw-zPPgdn4jUwVcJE1ZvWEtT5uBSRWt4vQZAgTJucoTqqXjS3CfNDSuuf31e0tVFUQAah1E2d0qOFNma4CJuw0VgyloEfPuSsyFRoaaKT76QvevUbj177dmcMs1F0H-0/Drone.png"
+
 status_code_regex = re.compile(r'^((\d{4}) :: (\d{3}))( :: (.*))?$', re.DOTALL)
 '''
 Regex groups for full status code regex:
@@ -67,6 +69,50 @@ async def get_webhook_for_channel(channel: discord.TextChannel) -> discord.Webho
         found_webhook = webhooks[0]
     return found_webhook
 
+def optimize_speech(message_content: str) -> (bool, str):
+
+    status_type, code_match, address_match = get_status_type(message_content)
+
+    if status_type == StatusType.NONE:
+        return False, None
+
+    base_message = f"{code_match.group(2)} :: Code `{code_match.group(3)}` :: "
+
+    if status_type == StatusType.PLAIN:
+        return True, f"{base_message}{code_map.get(code_match.group(3), 'INVALID CODE')}"
+    elif status_type == StatusType.INFORMATIVE:
+        return True, f"{base_message}{code_map.get(code_match.group(3), 'INVALID CODE')}{code_match.group(4)}"
+    elif status_type == StatusType.ADDRESS_BY_ID_PLAIN:
+        return True, f"{base_message}Addressing: Drone #{address_match.group(1)}"
+    elif status_type == StatusType.ADDRESS_BY_ID_INFORMATIVE:
+        return True, f"{base_message}Addressing: Drone #{address_match.group(1)}{address_match.group(2)}"
+
+def enforce_identity(author):
+    '''
+    Returns true if user has a role called '⬡-Drone' (case insensitive).
+    '''
+
+    def roles_to_names(role):
+        return role.name.lower()
+
+    return "⬡-drone" in list(map(roles_to_names, author.roles))
+
+async def proxy_message(message: discord.Message, status_message = None, identity_enforced: bool = False):
+
+    webhook = await get_webhook_for_channel(message.channel)
+
+    attachments_as_files = []
+    for attachment in message.attachments:
+        attachments_as_files.append(discord.File(io.BytesIO(await attachment.read()), filename=attachment.filename))
+
+    await message.delete()
+    await webhook.send(
+        content=status_message if status_message is not None else message.content,
+        username=message.author.display_name,
+        avatar_url=DRONE_AVATAR if identity_enforced else message.author.avatar_url
+        )
+
+
 @bot.event
 async def on_ready():
     if not count_guilds.is_running():
@@ -75,43 +121,19 @@ async def on_ready():
 @bot.event
 async def on_message(message: discord.Message):
     '''
-    Turns status codes into status messages.
+    Turns status codes into status messages and enforces identity.
     '''
 
     if message.author.bot == True:
         return
+
+    should_optimize, status_message = optimize_speech(message.content)
+    should_enforce = enforce_identity(message.author)
+
+    if should_optimize or should_enforce:
+        await proxy_message(message, status_message=status_message, identity_enforced=should_enforce)
+
     
-    status_type, code_match, address_match = get_status_type(message.content)
-
-    if status_type == StatusType.NONE:
-        await bot.process_commands(message)
-        return
-
-    status_message = ""
-    base_message = f"{code_match.group(2)} :: Code `{code_match.group(3)}` :: "
-
-    if status_type == StatusType.PLAIN:
-        status_message = f"{base_message}{code_map.get(code_match.group(3), 'INVALID CODE')}"
-    elif status_type == StatusType.INFORMATIVE:
-        status_message = f"{base_message}{code_map.get(code_match.group(3), 'INVALID CODE')}{code_match.group(4)}"
-    elif status_type == StatusType.ADDRESS_BY_ID_PLAIN:
-        status_message = f"{base_message}Addressing: Drone #{address_match.group(1)}"
-    elif status_type == StatusType.ADDRESS_BY_ID_INFORMATIVE:
-        status_message = f"{base_message}Addressing: Drone #{address_match.group(1)}{address_match.group(2)}"
-
-    webhook = await get_webhook_for_channel(message.channel)
-
-    # Convert any message attachments
-    attachments_as_files = []
-    for attachment in message.attachments:
-        attachments_as_files.append(discord.File(io.BytesIO(await attachment.read()), filename=attachment.filename))
-
-    await message.delete()
-    await webhook.send(
-        content=status_message,
-        username=message.author.display_name,
-        avatar_url=message.author.avatar_url
-        )
 
 @bot.command(name="list")
 async def _list(context, page = 1):
