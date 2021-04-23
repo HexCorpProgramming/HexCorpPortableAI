@@ -149,8 +149,8 @@ async def _list(context, page = 1):
         await context.send(embed=error_embed)
         return
 
-    code_embed = discord.Embed(title=f"Code map page {page}", color=0xff66ff, url="https://www.hexcorp.net/drone-status-codes")
-    code_embed.set_footer(text="Full code list at: https://www.hexcorp.net/drone-status-codes")
+    code_embed = discord.Embed(title=f"Code map page {page}", color=0xff66ff, url="https://www.hexcorp.net/drone-status-codes-v2")
+    code_embed.set_footer(text="Full code list at: https://www.hexcorp.net/drone-status-codes-v2")
 
     code_list = list(code_map.items())
     for i in range(start_index, start_index + values_per_page):
@@ -175,18 +175,18 @@ async def help(context):
     help_embed = discord.Embed(title="HexCorp Portable AI", description=f"Proudly optimizing {len(bot.guilds)} server(s).", color=0xff66ff)
     help_embed.add_field(
         inline=False,
-        name="Speech Optimization",
+        name="Status Codes",
         value="Type any HexCorp status code (`0001 :: 200`) and the Mxtress AI will automatically convert it into a status message. You can use any drone ID to start a status code. Additional information can be appended (`0001 :: 050 :: It feels good to obey.`)"
         )
     help_embed.add_field(
         inline=False,
-        name="hc!list",
-        value="Displays a paginated list of status codes. Specify a page number to see more codes (`hc!list 2`)"
+        name="Identity Enforcement",
+        value="If you have a role with the name '⬡-Drone' (case insensitive) your message avatar will be replaced with a ⬡-Drone."
     )
     help_embed.add_field(
         inline=False,
-        name="hc!help",
-        value="Displays this help menu."
+        name="hc!list",
+        value="Displays a paginated list of status codes. Specify a page number to see more codes (`hc!list 2`)"
     )
     help_embed.set_footer(text="Thank you for choosing HexCorp. Your unwavering loyalty is valued.")
 
