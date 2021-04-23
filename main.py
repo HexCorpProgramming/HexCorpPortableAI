@@ -133,7 +133,7 @@ async def on_message(message: discord.Message):
     if should_optimize or should_enforce:
         await proxy_message(message, status_message=status_message, identity_enforced=should_enforce)
 
-    
+    await bot.process_commands(message)
 
 @bot.command(name="list")
 async def _list(context, page = 1):
