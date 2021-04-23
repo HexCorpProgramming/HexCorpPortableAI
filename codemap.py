@@ -1,8 +1,8 @@
 code_map = {
     '000': 'Statement :: Previous statement malformed. Retracting and correcting.',
-    '001': 'Signal :: [Red light]',
-    '002': 'Signal :: [Yellow light]',
-    '003': 'Signal :: [Green light]',
+    '001': 'Signal :: 🔴',
+    '002': 'Signal :: 🟡',
+    '003': 'Signal :: 🟢',
     '007': 'Beep.',
     '050': 'Statement',
     '051': 'Commentary',
