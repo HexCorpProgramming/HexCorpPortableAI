@@ -109,7 +109,8 @@ async def proxy_message(message: discord.Message, status_message = None, identit
     await webhook.send(
         content=status_message if status_message is not None else message.content,
         username=message.author.display_name,
-        avatar_url=DRONE_AVATAR if identity_enforced else message.author.avatar_url
+        avatar_url=DRONE_AVATAR if identity_enforced else message.author.avatar_url,
+        files=attachments_as_files
         )
 
 
