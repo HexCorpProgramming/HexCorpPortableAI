@@ -1,6 +1,7 @@
 import re
 import io
 import sys
+from typing import Tuple
 import discord
 from enum import Enum
 from discord.ext import commands, tasks
@@ -69,7 +70,7 @@ async def get_webhook_for_channel(channel: discord.TextChannel) -> discord.Webho
         found_webhook = webhooks[0]
     return found_webhook
 
-def optimize_speech(message_content: str) -> (bool, str):
+def optimize_speech(message_content: str) -> Tuple[bool, str]:
 
     status_type, code_match, address_match = get_status_type(message_content)
 
