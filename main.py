@@ -8,7 +8,10 @@ from discord.ext import commands, tasks
 
 from codemap import code_map
 
-bot = commands.Bot(command_prefix="hc!", case_insensitive=True, help_command=None)
+intents = discord.Intents.default()
+intents.message_content = True
+
+bot = commands.Bot(command_prefix="hc!", case_insensitive=True, help_command=None, intents=intents)
 
 DRONE_AVATAR = "https://images.squarespace-cdn.com/content/v1/5cd68fb28dfc8ce502f14199/1586799484353-XBXNJR1XBM84C9YJJ0RU/ke17ZwdGBToddI8pDm48kLxnK526YWAH1qleWz-y7AFZw-zPPgdn4jUwVcJE1ZvWEtT5uBSRWt4vQZAgTJucoTqqXjS3CfNDSuuf31e0tVFUQAah1E2d0qOFNma4CJuw0VgyloEfPuSsyFRoaaKT76QvevUbj177dmcMs1F0H-0/Drone.png"
 
