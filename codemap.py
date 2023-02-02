@@ -4,6 +4,7 @@ code_map = {
     '002': 'Signal :: 🟡',
     '003': 'Signal :: 🟢',
     '007': 'Beep.',
+    '008': 'Boop.',
     '050': 'Statement',
     '051': 'Commentary',
     '052': 'Query',
